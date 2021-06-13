@@ -49,6 +49,16 @@ $(function() {
             }
         }
 
+        self.showBackupsDialog = function () {
+            self.klipperViewModel.consoleMessage("debug", "showBackupsDialog:")
+            var dialog = $("#klipper_backups_dialog");
+            dialog.modal({
+                show: "true",
+                minHeight: "500px",
+                maxHeight: "600px"
+            });
+        }
+
         self.addMacro = function() {
             self.settings.settings.plugins.klipper.macros.push({
                 name: 'Macro',
@@ -140,24 +150,7 @@ $(function() {
         }
 
         self.reloadFromFile = function () {
-            if (editor.session) {
-                var settings = {
-                    "crossDomain": true,
-                    "url": self.apiUrl,
-                    "method": "POST",
-                    "headers": self.header,
-                    "processData": false,
-                    "dataType": "json",
-                    "data": JSON.stringify({command: "reloadConfig"})
-                }
-
-                $.ajax(settings).done(function (response) {
-                    if (editor.session) {
-                        editor.session.setValue(response["data"]);
-                        editor.clearSelection();
-                    }
-                });
-            }
+            self.klipperViewModel.reloadConfig();
         }
 
         self.loadCfgBackup = function () {
@@ -228,19 +221,16 @@ $(function() {
         });
 
         // Uncomment this if not using maxLines: "Infinity"...
-        // setInterval(function(){ editor.resize(); }, 500);
+        setInterval(function() { editor.resize(); }, 500);
         self.onDataUpdaterPluginMessage = function(plugin, data) {
-            if(plugin == "klipper") {
-                if ("reload" == data.type){
-                    if ("config" == data.subtype){
-                        if (editor.session) {
-                                editor.session.setValue(data.payload);
-                                editor.clearSelection();
-                        }
-                    }
-                    return
-                }
-            }
+            if (plugin == "klipper" &&
+              data.type == "reload" &&
+              data.subtype == "config" &&
+              editor.session) {
+                self.klipperViewModel.consoleMessage("debug", "onDataUpdaterPluginMessage klipper reload config")
+                editor.session.setValue(data.payload);
+                editor.clearSelection();
+              }
         }
     }
 

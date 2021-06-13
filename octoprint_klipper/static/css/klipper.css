@@ -82,7 +82,7 @@ ul#klipper-settings {
 
 #tab_plugin_klipper_main .row-fluid {
    display: flex;
-   flex: row wrap;
+   flex-flow: row wrap;
    align-items: stretch;
 }
 
@@ -113,8 +113,25 @@ ul#klipper-settings {
    height: -webkit-fill-available;
 }
 
-/* UIcustomizer fix */
+#klipper_backups_dialog .modal-body {
+   display: flex;
+   flex-flow: row wrap;
+}
 
+#klipper_backups_dialog #left-side {
+   flex: 1 auto;
+}
+
+#klipper_backups_dialog #right-side {
+   flex: 3 auto;
+}
+
+div#klipper_backups_dialog div.modal-body div#right-side textarea {
+   height: 98%;
+   width: 98%;
+}
+
+/* UIcustomizer fix */
 body.UICResponsiveMode #settings_dialog_content {
 	height: calc(100% - 60px);
 	margin-right: -18px;

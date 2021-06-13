@@ -1,0 +1,22 @@
+<div id="klipper_backups_dialog" class="modal hide fade large" tabindex="-1" role="dialog" aria-labelledby="klipper_backups_dialog_label" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">&times;</button>
+    <h3 id="klipper_dialog_label">{{ _('Backups') }}</h3>
+  </div>
+  <div class="modal-body">
+    <div id="left-side">
+      <button class="btn btn-small" data-bind="click: listBakFiles" title="Refresh file list"><i class="icon-refresh"></i></button>
+      <div data-bind="foreach: availableBakFiles">
+        <div>
+          <button class="btn btn-small" data-bind="click: $parent.restoreCfg" title="{{ _('Copy Backup to the ConfigPath') }}">{{ _('Restore Config') }}</button>
+          <a href='#' data-bind='click: $parent.showCfg'><span data-bind="text: name"></span><span data-bind="text: size"></span> (<span data-bind="text: mdate"></span>)</a>
+        </div>
+      </div>
+    </div>
+    <div id="right-side">
+      <textarea readonly data-bind="value: CfgContent"></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+  </div>
+</div>

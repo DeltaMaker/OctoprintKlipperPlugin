@@ -60,6 +60,15 @@
            </span>
         </div>
     </div>
+    <div class="control-group">
+        <label class="control-label">{{ _('Config Backup') }}</label>
+        <div class="controls">
+          <button class="btn btn-small" data-bind='click: showBackupsDialog'
+            title="{{ _('Show Backups') }}">
+            <i class="fas fa-upload"></i> {{ _('Show Backups') }}
+          </button>
+        </div>
+    </div>
   </div>
   <!-- Macros -->
   <div class="tab-pane" id="macros">
@@ -212,7 +221,7 @@
           title="{{ _('Reload last version') }}">
           <i class="fas fa-redo"></i> {{ _('Reload last version') }}
         </button>
-        <button class="btn btn-small" data-bind='click: reloadFromFile'
+        <button class="btn btn-small" data-bind="click: reloadFromFile"
           title="{{ _('Reload from file') }}">
           <i class="fas fa-upload"></i> {{ _('Reload from file') }}
         </button>

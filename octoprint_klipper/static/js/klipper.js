@@ -189,7 +189,7 @@ $(function () {
                 if (type == "info"){
                     console.info("OctoKlipper : " + message);
                 } else if (type == "debug"){
-                        console.debug("OctoKlipper : " + message);
+                    console.debug("OctoKlipper : " + message);
                 } else {
                     console.error("OctoKlipper : " + message);
                 }
@@ -211,7 +211,9 @@ $(function () {
             $.ajax(settings).done(function (response) {
                 self.consoleMessage(
                     "debug",
-                    "Reloaded config file from Backend");
+                    "Reloaded config file from Backend: " +
+                    response.text
+                );
             });
         }
 

@@ -1,3 +1,9 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+import glob
+import os, time
+
+from . import util
+
 def list_bak_files(self):
     files = []
     bak_config_path = os.path.join(self.get_plugin_data_folder(), "configs", "*")
@@ -13,7 +19,7 @@ def list_bak_files(self):
             mdate=time.strftime("%d.%m.%Y %H:%M", filemdate)
         ))
         self.log_debug("list_bak_files " + f)
-    return dict(data = files)
+    return files
 
 def restore_cfg_from_backup(self, file, dst):
     """
@@ -39,7 +45,7 @@ def copy_cfg_to_backup(self, src):
     Copy the config file to the data folder of OctoKlipper
     """
     from shutil import copyfile
-    if self.file_exist(src):
+    if util.file_exist(src):
         cfg_path = os.path.join(self.get_plugin_data_folder(), "configs", "")
         filename = os.path.basename(src)
         if not os.path.exists(cfg_path):

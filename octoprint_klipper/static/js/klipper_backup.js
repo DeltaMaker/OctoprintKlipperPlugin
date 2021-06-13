@@ -27,6 +27,7 @@ function KlipperBackupViewModel(parameters) {
    });
 
    self.apiUrl = OctoPrint.getSimpleApiUrl("klipper");
+   self.Url = OctoPrint.getBlueprintUrl("klipper");
 
    self.availableBakFiles = ko.observableArray();
    self.CfgContent = ko.observableArray();
@@ -44,12 +45,12 @@ function KlipperBackupViewModel(parameters) {
    self.listBakFiles = function() {
       var settings = {
         "crossDomain": true,
-        "url": self.apiUrl,
+        "url": self.Url + "CfgBackup",
         "method": "POST",
         "headers": self.header,
         "processData": false,
         "dataType": "json",
-        "data": JSON.stringify({command: "listBakFiles"})
+        "data": JSON.stringify({command: "list"})
       }
 
       $.ajax(settings).done(function (response) {
@@ -65,123 +66,67 @@ function KlipperBackupViewModel(parameters) {
          )
       )
          return;
-      var html =
-         "<p>" +
-         gettext(
-             "This will update the following components and restart the server:"
-         ) +
-         "</p>";
-      html +=
-         "<p>" +
-         gettext(
-             "Be sure to read through any linked release notes, especially those for OctoPrint since they might contain important information you need to know <strong>before</strong> upgrading."
-         ) +
-         "</p>" +
-         "<p><strong>" +
-         gettext("This action may disrupt any ongoing print jobs.") +
-         "</strong></p>" +
-         "<p>" +
-         gettext(
-             "Depending on your printer's controller and general setup, restarting OctoPrint may cause your printer to be reset."
-         ) +
-         "</p>" +
-         "<p>" +
-         gettext("Are you sure you want to proceed?") +
-         "</p>";
-      showConfirmationDialog({
-         title: gettext("Are you sure you want to update now?"),
-         html: html,
-         proceed: gettext("Proceed"),
-         onproceed: function (file) {
-            var url = PLUGIN_BASEURL + "CfgBackup/";
-            var payload = {
-               command: "getCfg",
-               CfgFile: file.file
-            };
-            $.ajax({
-               url: url,
-               type: "POST",
-               dataType: "json",
-               data: JSON.stringify(payload),
-               contentType: "application/json; charset=UTF-8",
-               success: function (response) {
-                  self.CfgContent(response.content)
-               }
-           });
 
-
-                .getCfg({CfgFile: file.file})
-                .done(function (data) {
-                  self.CfgContent(data.content)
-                })
-                .always(function () {
-
-                });
-         },
-         onclose: function () {
-         }
-      });
-
-   };
-
-   self.markRead = function () {
-
-      $.ajax({
-          url: url,
-          type: "POST",
-          dataType: "json",
-          data: JSON.stringify(payload),
-          contentType: "application/json; charset=UTF-8",
-          success: function () {
-              if (reload) {
-                  self.retrieveData();
-              }
-          }
-      });
-  };
-   /* self.showCfg = function(file) {
-      var settings = {
-        "crossDomain": true,
-        "url": self.apiUrl,
-        "method": "POST",
-        "headers": self.header,
-        "processData": false,
-        "dataType": "json",
-        "data": JSON.stringify(
-           {
-              command: "getCfg",
-              CfgFile: file.file
-           }
-        )
-      }
-
-      $.ajax(settings).done(function (response) {
-         self.CfgContent(response.content)
-      });
-   } */
-
-   self.restoreCfg = function(file) {
       var settings = {
          "crossDomain": true,
-         "url": self.apiUrl,
-         "method": "POST",
+         "url": self.Url + "CfgBackup",
+         "type": "POST",
          "headers": self.header,
          "processData": false,
          "dataType": "json",
+         "contentType": "application/json; charset=UTF-8",
          "data": JSON.stringify(
             {
-               command: "restoreCfg",
+               command: "read",
                CfgFile: file.file
             }
          )
       }
 
       $.ajax(settings).done(function (response) {
-         self.klipperViewModel.consoleMessage("debug", "restoreCfg: " + response.text)
-         self.klipperViewModel.reloadConfig()
-      });
+         self.CfgContent(response.content)
+      })
    }
 
+   self.restoreCfg = function(file) {
+      var html =
+         "<p>" +
+         gettext(
+             "This will overwrite any file with the same name on the configpath."
+         ) +
+         "</p>";
+      html +=
+         "<p>" +
+         file.name +
+         "</p>";
+      showConfirmationDialog({
+         title: gettext("Are you sure you want to restore now?"),
+         html: html,
+         proceed: gettext("Proceed"),
+         onproceed: function () {
+            var settings = {
+               "crossDomain": true,
+               "url": self.Url + "CfgBackup",
+               "type": "POST",
+               "headers": self.header,
+               "processData": false,
+               "dataType": "json",
+               "contentType": "application/json; charset=UTF-8",
+               "data": JSON.stringify(
+                  {
+                     command: "restore",
+                     CfgFile: file.file
+                  }
+               )
+            }
+
+            $.ajax(settings).done(function (response) {
+               self.klipperViewModel.consoleMessage("debug", "restoreCfg: " + response.text)
+               self.klipperViewModel.reloadConfig()
+            });
+         }
+      })
+   }
 }
 
 OCTOPRINT_VIEWMODELS.push({

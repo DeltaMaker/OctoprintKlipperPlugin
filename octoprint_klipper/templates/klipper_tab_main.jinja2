@@ -30,7 +30,7 @@
           </button>
           <button
             class="btn btn-block btn-small"
-            data-bind="visible: hasRight('CONFIG', 'Ko'), click: function() {openOctoKlipperSettings('klipper-config');}"
+            data-bind="visible: $root.loginState.hasPermissionKo($root.access.permissions.PLUGIN_KLIPPER_CONFIG), click: function() {openOctoKlipperSettings('klipper-config');}"
             title="{{ _('Open the Klipper configuration file') }}"
           >
             <i class="fa icon-black fa-file-code-o"></i>
@@ -94,7 +94,7 @@
           </button>
         </div>
       </div>
-      <div class="controls" data-bind="visible: hasRight('MACRO', 'Ko')">
+      <div class="controls" data-bind="visible: $root.loginState.hasPermissionKo($root.access.permissions.PLUGIN_KLIPPER_MACRO)">
         <label class="control-label"
           ><i class="icon-list-alt"></i> {{ _("Macros") }}</label
         >

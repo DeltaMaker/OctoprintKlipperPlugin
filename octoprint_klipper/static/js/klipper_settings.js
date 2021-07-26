@@ -17,8 +17,6 @@ $(function() {
     $('#klipper-settings a:first').tab('show');
     function KlipperSettingsViewModel(parameters) {
         var self = this;
-        var obKlipperConfig = null;
-        var editor = null;
 
         self.settings = parameters[0];
         self.klipperViewModel = parameters[1];
@@ -30,28 +28,20 @@ $(function() {
 
         self.apiUrl = OctoPrint.getSimpleApiUrl("klipper");
 
-        self.onSettingsBeforeSave = function () {
-            if (editor.session) {
-                self.klipperViewModel.consoleMessage("debug", "onSettingsBeforeSave:")
-                var settings = {
-                    "crossDomain": true,
-                    "url": self.apiUrl,
-                    "method": "POST",
-                    "headers": self.header,
-                    "processData": false,
-                    "dataType": "json",
-                    "data": JSON.stringify({command: "checkConfig",
-                                            config: editor.session.getValue()})
-                }
-
-                $.ajax(settings).done(function (response) {
-                });
-            }
-        }
-
         self.showBackupsDialog = function () {
             self.klipperViewModel.consoleMessage("debug", "showBackupsDialog:")
+
             var dialog = $("#klipper_backups_dialog");
+            dialog.modal({
+                show: "true",
+                minHeight: "500px",
+                maxHeight: "600px"
+            });
+        }
+
+        self.showEditor = function () {
+            self.klipperViewModel.consoleMessage("debug", "showEditor:")
+            var dialog = $("#klipper_editor");
             dialog.modal({
                 show: "true",
                 minHeight: "500px",
@@ -115,122 +105,6 @@ $(function() {
                 var rawList = list();
                 list.splice(i-1, 2, rawList[i], rawList[i-1]);
             }
-        }
-
-        self.minusFontsize = function () {
-            self.settings.settings.plugins.klipper.configuration.fontsize(self.settings.settings.plugins.klipper.configuration.fontsize() - 1);
-            if (self.settings.settings.plugins.klipper.configuration.fontsize() < 9) {
-                self.settings.settings.plugins.klipper.configuration.fontsize(9);
-            }
-            if (editor) {
-                editor.setFontSize(self.settings.settings.plugins.klipper.configuration.fontsize());
-                editor.resize();
-            }
-        }
-
-        self.plusFontsize = function () {
-            self.settings.settings.plugins.klipper.configuration.fontsize(self.settings.settings.plugins.klipper.configuration.fontsize() + 1);
-            if (self.settings.settings.plugins.klipper.configuration.fontsize() > 20) {
-                self.settings.settings.plugins.klipper.configuration.fontsize(20);
-            }
-            if (editor) {
-                editor.setFontSize(self.settings.settings.plugins.klipper.configuration.fontsize());
-                editor.resize();
-            }
-        }
-
-        self.loadLastSession = function () {
-            if (self.settings.settings.plugins.klipper.configuration.old_config() != "") {
-                self.klipperViewModel.consoleMessage("info","lastSession:" + self.settings.settings.plugins.klipper.configuration.old_config())
-                if (editor.session) {
-                    editor.session.setValue(self.settings.settings.plugins.klipper.configuration.old_config());
-                    editor.clearSelection();
-                }
-            }
-        }
-
-        self.reloadFromFile = function () {
-            self.klipperViewModel.reloadConfig();
-        }
-
-        self.loadCfgBackup = function () {
-            if (editor.session) {
-                var settings = {
-                    "crossDomain": true,
-                    "url": self.apiUrl,
-                    "method": "POST",
-                    "headers": self.header,
-                    "processData": false,
-                    "dataType": "json",
-                    "data": JSON.stringify({command: "reloadCfgBackup"})
-                }
-
-                $.ajax(settings).done(function (response) {
-                    if (editor.session) {
-                        editor.session.setValue(response["data"]);
-                        editor.clearSelection();
-                    }
-                });
-            }
-        }
-
-        self.configBound = function (config) {
-            config.withSilence = function() {
-                this.notifySubscribers = function() {
-                    if (!this.isSilent) {
-                        ko.subscribable.fn.notifySubscribers.apply(this, arguments);
-                    }
-                }
-
-                this.silentUpdate = function(newValue) {
-                    this.isSilent = true;
-                    this(newValue);
-                    this.isSilent = false;
-                };
-
-                return this;
-            }
-
-            obKlipperConfig = config.withSilence();
-            if (editor) {
-                editor.setValue(obKlipperConfig());
-                editor.setFontSize(self.settings.settings.plugins.klipper.configuration.fontsize());
-                editor.resize();
-                editor.clearSelection();
-            }
-            return obKlipperConfig;
-        }
-
-        ace.config.set("basePath", "plugin/klipper/static/js/lib/ace/");
-        editor = ace.edit("plugin-klipper-config");
-        editor.setTheme("ace/theme/monokai");
-        editor.session.setMode("ace/mode/klipper_config");
-        editor.setOptions({
-            hScrollBarAlwaysVisible: false,
-            vScrollBarAlwaysVisible: false,
-            autoScrollEditorIntoView: true,
-            showPrintMargin: false,
-            //maxLines: "Infinity"
-        })
-
-        editor.session.on('change', function(delta) {
-            if (obKlipperConfig) {
-                obKlipperConfig.silentUpdate(editor.getValue());
-                editor.resize();
-            }
-        });
-
-        // Uncomment this if not using maxLines: "Infinity"...
-        setInterval(function() { editor.resize(); }, 500);
-        self.onDataUpdaterPluginMessage = function(plugin, data) {
-            if (plugin == "klipper" &&
-              data.type == "reload" &&
-              data.subtype == "config" &&
-              editor.session) {
-                self.klipperViewModel.consoleMessage("debug", "onDataUpdaterPluginMessage klipper reload config")
-                editor.session.setValue(data.payload);
-                editor.clearSelection();
-              }
         }
     }
 

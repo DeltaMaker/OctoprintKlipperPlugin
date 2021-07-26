@@ -46,7 +46,7 @@ $(function () {
         };
 
         self.onSettingsShown = function () {
-            self.reloadConfig();
+            //self.reloadConfig();
         }
 
         self.showLevelingDialog = function () {
@@ -153,22 +153,6 @@ $(function () {
                         self.logMessage(data.time, data.subtype, data.payload);
                         self.consoleMessage(data.subtype, data.payload);
                 }
-
-                //if ("warningPopUp" == data.type){
-                //    self.showPopUp(data.subtype, data.title, data.payload);
-                //    return;
-                //} else if ("errorPopUp" == data.type){
-                //    self.showPopUp(data.subtype, data.title, data.payload);
-                //    return;
-                //} else if ("reload" == data.type){
-                //    return;
-                //} else if ("console" == data.type) {
-                //    self.consoleMessage(data.subtype, data.payload);
-                //} else if (data.type == "status") {
-                //    self.shortStatus(data.payload);
-                //} else {
-                //        self.logMessage(data.time, data.subtype, data.payload);
-                //}
             }
         };
 
@@ -225,19 +209,26 @@ $(function () {
             return self.connectionState.isOperational();
         };
 
-        self.hasRight = function (right_role, type) {
-            var arg = eval("self.access.permissions.PLUGIN_KLIPPER_" + right_role);
-
-            if (type == "Ko") {
-                return self.loginState.hasPermissionKo(arg);
-            }
-            return self.loginState.hasPermission(arg);
+        self.hasRight = function (right_role) {
+            //if (self.loginState.isAdmin) return true;
+            if (right_role == "CONFIG") {
+                return self.loginState.hasPermission(self.access.permissions.PLUGIN_KLIPPER_CONFIG);
+            } else if (right_role == "MACRO") {
+                return self.loginState.hasPermission(self.access.permissions.PLUGIN_KLIPPER_MACRO);
+            };
         };
 
         // OctoKlipper settings link
         self.openOctoKlipperSettings = function (profile_type) {
+            self.consoleMessage(
+                "debug",
+                ": openOctoKlipperSettings :"
+            );
             if (!self.hasRight("CONFIG")) return;
-
+            self.consoleMessage(
+                "debug",
+                ": openOctoKlipperSettings : Rights okay"
+            );
             $("a#navbar_show_settings").click();
             $("li#settings_plugin_klipper_link a").click();
             if (profile_type) {

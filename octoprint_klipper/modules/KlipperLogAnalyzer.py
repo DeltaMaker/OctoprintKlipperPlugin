@@ -15,6 +15,7 @@
 
 import flask
 import optparse, datetime
+from .. import logger
 
 class KlipperLogAnalyzer():
    MAXBANDWIDTH=25000.
@@ -81,6 +82,7 @@ class KlipperLogAnalyzer():
             out.append(keyparts)
          f.close()
       except IOError:
+          logger.log_error(self, "Couldn't open log file: {}".format(logname))
           print("Couldn't open log file")
       return out
 

@@ -614,6 +614,16 @@ class KlipperPlugin(
 
 __plugin_name__ = "OctoKlipper"
 __plugin_pythoncompat__ = ">=2.7,<4"
+__plugin_settings_overlay__ = {
+    'system': {
+        'actions': [{
+            'action': 'octoklipper_restart',
+            'command': 'sudo service klipper restart',
+            'name': 'Restart Klipper',
+            'confirm': 'You are about to restart Klipper.'
+        }]
+    }
+}
 
 
 def __plugin_load__():

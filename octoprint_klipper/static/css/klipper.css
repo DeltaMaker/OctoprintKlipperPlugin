@@ -132,6 +132,10 @@ ul#klipper-settings {
    flex: 3 auto;
 }
 
+.gap {
+   justify-content: space-evenly;
+}
+
 @media all and (max-width: 940px) {
    .klipper-row-fluid {
      /* On small screens, we are no longer using row direction but column */
@@ -184,19 +188,19 @@ div#settings_plugin_klipper div.tab-content div#conf.tab-pane {
    width: 100%;
 }
 
-div#settings_plugin_klipper div.tab-content div#conf.tab-pane div.control-group {
+div#settings_plugin_klipper div.tab-content div#conf.tab-pane div.control-group , div#klipper_editor div.control-group{
    height: 100%;
    margin: 0;
    display: flex;
    flex-direction: column;
 }
 
-div#settings_plugin_klipper div.tab-content div#conf.tab-pane div.control-group div.editor-controls{
+div#klipper_editor div.control-group div.editor-controls{
    margin-bottom: 0px;
    height: 26px;
 }
 
-div#settings_plugin_klipper div.tab-content div#conf.tab-pane div.control-group div.conf-editor {
+div#klipper_editor div.control-group div.conf-editor {
    height: 95%;
    height: calc(100% - 28px);
    width: 99%;
@@ -206,25 +210,25 @@ div#settings_plugin_klipper div.tab-content div#conf.tab-pane div.control-group 
    overflow: auto;
 }
 
-div#settings_plugin_klipper div.tab-content div#conf.tab-pane div.control-group div.conf-editor div#plugin-klipper-config {
+div#klipper_editor div.conf-editor div#plugin-klipper-config {
    font-family: monospace;
    overflow: auto;
    height: 100%;
    height: -webkit-fill-available;
 }
 
-div#settings_plugin_klipper.tab-pane.active form.form-horizontal div.tab-content div#conf.tab-pane.active button.btn.btn-small {
+/* div#settings_plugin_klipper.tab-pane.active form.form-horizontal div.tab-content div#conf.tab-pane.active button.btn.btn-small ,div#klipper_editor button.btn.btn-small{
    width: 30%;
    display: inline-block;
    margin: 0px 2px 2px 2px;
-}
+} */
 
 /*checkboxes*/
-div#settings_plugin_klipper.tab-pane.active form.form-horizontal div.tab-content div.tab-pane.active input.inline-checkbox {
+div#settings_plugin_klipper.tab-pane.active form.form-horizontal div.tab-content div.tab-pane.active input.inline-checkbox ,div#klipper_editor input.inline-checkbox {
    vertical-align: -0.2em;
 }
 
-div#settings_plugin_klipper.tab-pane.active form.form-horizontal div.tab-content div.tab-pane.active label.inline {
+div#settings_plugin_klipper.tab-pane.active form.form-horizontal div.tab-content div.tab-pane.active label.inline ,div#klipper_editor .inline {
    display: inline;
 }
 

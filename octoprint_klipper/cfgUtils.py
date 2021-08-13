@@ -3,6 +3,8 @@ import glob
 import os, time, sys
 
 from . import util, logger
+from octoprint.util import is_hidden_path
+from octoprint.server import NO_CONTENT
 
 def list_cfg_files(self, path):
     files = []
@@ -29,6 +31,7 @@ def list_cfg_files(self, path):
     return files
 
 def get_cfg(self, file):
+    config = ""
     if not file:
         cfg_path = os.path.expanduser(
             self._settings.get(["configuration", "configpath"])
@@ -52,7 +55,7 @@ def get_cfg(self, file):
         finally:
             f.close()
 
-def save_cfg(self, data, file="printer.cfg"):
+def save_cfg(self, content, filename="printer.cfg"):
     '''
     Saves the cfg file to the configpath
     '''
@@ -61,30 +64,20 @@ def save_cfg(self, data, file="printer.cfg"):
         "Save klipper config"
     )
 
-    check_parse = self._settings.get(["configuration", "parse_check"])
-    logger.log_debug(self, "check_parse: {}".format(check_parse))
-
     if sys.version_info[0] < 3:
-        data["config"] = data["config"].encode('utf-8')
+        content = content.encode('utf-8')
+    check_parse = self._settings.get(["configuration", "parse_check"])
+    logger.log_debug(self, "check_parse on filesave: {}".format(check_parse))
+    configpath = os.path.expanduser(self._settings.get(["configuration", "configpath"]))
+    filepath = os.path.join(configpath, filename)
 
-    # check for configpath if it was changed during changing of the configfile
-    if util.key_exist(data, "configuration", "configpath"):
-        configpath = os.path.expanduser(
-            data["configuration"]["configpath"]
-        )
-    else:
-        configpath = os.path.expanduser(
-            self._settings.get(["configuration", "configpath"])
-        )
-    filename = os.path.basename(file)
-    filepath = os.path.join(configpath, file)
-    self._settings.set(["configuration", "temp_config"], data)
+    self._settings.set(["configuration", "temp_config"], content)
     if copy_cfg_to_backup(self, filepath):
-        if self._parsing_check_response or not check_parse:
+        if check_cfg(self, content) == "OK" or not check_parse:
             try:
                 logger.log_debug(self, "Writing Klipper config to {}".format(filepath))
                 with open(filepath, "w") as f:
-                    f.write(data)
+                    f.write(content)
             except IOError:
                 logger.log_error(self, "Error: Couldn't open Klipper config file: {}".format(filepath))
                 return False
@@ -105,8 +98,8 @@ def check_cfg(self, data):
 
     try:
         dataToValidated = configparser.RawConfigParser(strict=False)
-        #
         if sys.version_info[0] < 3:
+            import StringIO
             buf = StringIO.StringIO(data)
             dataToValidated.readfp(buf)
         else:
@@ -123,6 +116,8 @@ def check_cfg(self, data):
                 for x in value_search_list:
                     if dataToValidated.has_option(y, x):
                         a_float = dataToValidated.getfloat(y, x)
+                        if a_float:
+                            pass
         except ValueError as error:
             logger.log_error(
                 self,
@@ -159,12 +154,12 @@ def check_cfg(self, data):
         )
         util.send_message(self, "PopUp", "warning", "OctoKlipper: Invalid Config data\n",
                             "Config got not saved!\n"
-                            + "You can reload your last changes\n"
+                            + "You can reload your last session\n"
                             + "on the 'Klipper Configuration' tab.\n\n"
                             + str(error))
-        return False
+        return "NOK"
     else:
-        return True
+        return "OK"
 
 def copy_cfg(self, file, dst):
     """
@@ -180,15 +175,15 @@ def copy_cfg(self, file, dst):
                 self,
                 "Error: Klipper config file not found at: {}".format(file)
             )
-            return "False"
+            return False
         else:
             logger.log_debug(
                 self,
                 "File copied: "
                 + file
             )
-            return "True"
-    return "False"
+            return True
+    return False
 
 def copy_cfg_to_backup(self, src):
     """
@@ -196,6 +191,7 @@ def copy_cfg_to_backup(self, src):
     returns boolean
     """
     from shutil import copyfile
+
     if os.path.isfile(src):
         cfg_path = os.path.join(self.get_plugin_data_folder(), "configs", "")
         filename = os.path.basename(src)
@@ -225,21 +221,22 @@ def copy_cfg_to_backup(self, src):
     else:
         return False
 
-def remove_cfg(self, file):
+def remove_cfg(self, filename):
+    configpath = os.path.expanduser(
+        self._settings.get(["configuration", "configpath"])
+    )
 
-    if util.file_exist(self, file):
-        filepath = os.path.split(file)
+    full_path = os.path.realpath(os.path.join(configpath, filename))
+    if (
+        full_path.startswith(full_path)
+        and os.path.exists(full_path)
+        and not is_hidden_path(full_path)
+    ):
         try:
-            os.remove(file)
-        except IOError:
-            logger.log_error(
-                self,
-                "Error: Klipper config file not found at: {}".format(
-                    file)
-            )
-            responseText = "Error: Klipper config file not found at: {}".format(file)
-            return responseText
-        else:
-            return "OK"
+            os.remove(full_path)
+        except Exception:
+            self._octoklipper_logger.exception("Could not delete {}".format(filename))
+            raise
+    return NO_CONTENT
 
 

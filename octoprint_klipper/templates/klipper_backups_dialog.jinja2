@@ -1,4 +1,5 @@
-<div id="klipper_backups_dialog" class="modal hide fade large" tabindex="-1" role="dialog" aria-labelledby="klipper_backups_dialog_label" aria-hidden="true">
+<div id="klipper_backups_dialog" class="modal hide fade large" tabindex="-1" role="dialog" aria-labelledby="klipper_backups_dialog_label"
+  aria-hidden="true">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">&times;</button>
     <h3 id="klipper_dialog_label">{{ _('Backups') }}</h3>
@@ -6,62 +7,80 @@
   <div class="modal-body klipper-column-fluid">
     <div class="klipper-row-fluid">
       <div class="klipper-fluid-item-2" data-bind="visible: $root.klipperViewModel.hasRightKo('CONFIG')">
+        <button class="btn btn-small" data-bind="click: listBakFiles" title="{{ _('Refresh file list') }}"><i class="icon-refresh"></i>
+          Refresh</button>
         <div class="btn-group">
-          <button class="btn btn-small" data-bind="click: listBakFiles" title="{{ _('Refresh file list') }}"><i class="icon-refresh"></i> Refresh</button>
           <button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><i class="far fa-square"></i> <span class="caret"></span></button>
           <ul class="dropdown-menu">
-            <li><a href="javascript:void(0)" data-bind="click: markFilesOnPage">{{ _('Select all on this page') }}</a></li>
+            <li><a href="javascript:void(0)" data-bind="click: markFilesOnPage">{{ _('Select all on this page') }}</a>
+            </li>
             <li><a href="javascript:void(0)" data-bind="click: markAllFiles">{{ _('Select all') }}</a></li>
             <li class="divider"></li>
             <li><a href="javascript:void(0)" data-bind="click: clearMarkedFiles">{{ _('Clear selection') }}</a></li>
           </ul>
         </div>
-        <button class="btn btn-small" data-bind="click: restoreMarkedFiles, enable: markedForFileRestore().length > 0">{{ _('Restore selected') }}</button>
-        <button class="btn btn-small" data-bind="click: removeMarkedFiles, enable: markedForFileRestore().length > 0">{{ _('Delete selected') }}</button>
+        <button class="btn btn-small"
+          data-bind="click: restoreMarkedFiles, enable: markedForFileRestore().length > 0">{{ _('Restore selected') }}</button>
+        <button class="btn btn-small" data-bind="click: removeMarkedFiles, enable: markedForFileRestore().length > 0">{{
+          _('Delete selected') }}</button>
       </div>
-      <div class="klipper-fluid-item-1">
+      <div class="pull-right">
         <div class="btn-group">
           <button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><i class="fas fa-wrench"></i> <span class="caret"></span></button>
           <ul class="dropdown-menu dropdown-menu-right">
-              <li><a href="javascript:void(0)" data-bind="click: function() { backups.changeSorting('name'); }"><i class="fas fa-check" data-bind="style: {visibility: backups.currentSorting() == 'name' ? 'visible' : 'hidden'}"></i> {{ _('Sort by name') }} ({{ _('ascending') }})</a></li>
-              <li><a href="javascript:void(0)" data-bind="click: function() { backups.changeSorting('date'); }"><i class="fas fa-check" data-bind="style: {visibility: backups.currentSorting() == 'date' ? 'visible' : 'hidden'}"></i> {{ _('Sort by date') }} ({{ _('descending') }})</a></li>
-              <li><a href="javascript:void(0)" data-bind="click: function() { backups.changeSorting('size'); }"><i class="fas fa-check" data-bind="style: {visibility: backups.currentSorting() == 'size' ? 'visible' : 'hidden'}"></i> {{ _('Sort by file size') }} ({{ _('descending') }})</a></li>
+            <li><a href="javascript:void(0)" data-bind="click: function() { backups.changeSorting('name'); }"><i class="fas fa-check"
+                  data-bind="style: {visibility: backups.currentSorting() == 'name' ? 'visible' : 'hidden'}"></i> {{ _('Sort by name') }}
+                ({{ _('ascending') }})</a></li>
+            <li><a href="javascript:void(0)" data-bind="click: function() { backups.changeSorting('date'); }"><i class="fas fa-check"
+                  data-bind="style: {visibility: backups.currentSorting() == 'date' ? 'visible' : 'hidden'}"></i> {{ _('Sort by date') }}
+                ({{ _('descending') }})</a></li>
+            <li><a href="javascript:void(0)" data-bind="click: function() { backups.changeSorting('size'); }"><i class="fas fa-check"
+                  data-bind="style: {visibility: backups.currentSorting() == 'size' ? 'visible' : 'hidden'}"></i> {{ _('Sort by file size') }}
+                ({{ _('descending') }})</a></li>
           </ul>
         </div>
       </div>
     </div>
-    <table class="table table-striped table-hover table-condensed table-hover klipper-fluid-item-1" id="klipper_bak_files">
+    <table class="table table-striped table-hover table-condensed table-hover" id="klipper_bak_files">
       <thead>
-      <tr>
+        <tr>
           <th class="klipper_baks_checkbox"></th>
           <th class="klipper_baks_name">{{ _('Name') }}</th>
           <th class="klipper_baks_size">{{ _('Size') }}</th>
           <th class="klipper_baks_action">{{ _('Action') }}</th>
-      </tr>
+        </tr>
       </thead>
       <tbody data-bind="foreach: backups.paginatedItems">
         <tr data-bind="attr: {title: name}">
-          <td class="klipper_baks_checkbox"><input type="checkbox" data-bind="value: file, checked: $root.markedForFileRestore, invisible: !$root.klipperViewModel.hasRightKo('CONFIG')"></td>
+          <td class="klipper_baks_checkbox"><input type="checkbox"
+              data-bind="value: file, checked: $root.markedForFileRestore, invisible: !$root.klipperViewModel.hasRightKo('CONFIG')" />
+          </td>
           <td class="klipper_baks_name" data-bind="text: name"></td>
           <td class="klipper_baks_size" data-bind="text: size"></td>
           <td class="klipper_baks_action">
-          <a href="javascript:void(0)" class="far fa-trash-alt" title="{{ _('Delete') }}" data-bind="css: {disabled: !$root.klipperViewModel.hasRightKo('CONFIG')()}, click: function() { $parent.removeCfg($data.name); }"></a>
-          &nbsp;|&nbsp;
-          <a href="javascript:void(0)" class="fas fa-download" title="{{ _('Restore') }}"  data-bind="css: {disabled: !$root.klipperViewModel.hasRightKo('CONFIG')()}, click: function() { $parent.restoreBak($data.name); }"></a>
-          &nbsp;|&nbsp;
-          <a href="javascript:void(0)" class="fas fa-camera" title="{{ _('Preview') }}" data-bind="css: {disabled: !$root.klipperViewModel.hasRightKo('CONFIG')()}, click: function() { $parent.showCfg($data.name); }"></a></td>
+            <a href="javascript:void(0)" class="far fa-trash-alt" title="{{ _('Delete') }}"
+              data-bind="css: {disabled: !$root.klipperViewModel.hasRightKo('CONFIG')()}, click: function() { $parent.removeCfg($data.name); }"></a>
+            &nbsp;|&nbsp;
+            <a href="javascript:void(0)" class="fas fa-download" title="{{ _('Restore') }}"
+              data-bind="css: {disabled: !$root.klipperViewModel.hasRightKo('CONFIG')()}, click: function() { $parent.restoreBak($data.name); }"></a>
+            &nbsp;|&nbsp;
+            <a href="javascript:void(0)" class="fas fa-camera" title="{{ _('Preview') }}"
+              data-bind="css: {disabled: !$root.klipperViewModel.hasRightKo('CONFIG')()}, click: function() { $parent.showCfg($data.name); }"></a>
+          </td>
         </tr>
       </tbody>
     </table>
     <div class="pagination pagination-mini pagination-centered">
       <ul>
-          <li data-bind="css: {disabled: backups.currentPage() === 0}"><a href="javascript:void(0)" data-bind="click: backups.prevPage">«</a></li>
+        <li data-bind="css: {disabled: backups.currentPage() === 0}"><a href="javascript:void(0)" data-bind="click: backups.prevPage">«</a></li>
       </ul>
       <ul data-bind="foreach: backups.pages">
-          <li data-bind="css: { active: $data.number === $root.backups.currentPage(), disabled: $data.number === -1 }"><a href="javascript:void(0)" data-bind="text: $data.text, click: function() { $root.backups.changePage($data.number); }"></a></li>
+        <li data-bind="css: { active: $data.number === $root.backups.currentPage(), disabled: $data.number === -1 }"><a href="javascript:void(0)"
+            data-bind="text: $data.text, click: function() { $root.backups.changePage($data.number); }"></a></li>
       </ul>
       <ul>
-          <li data-bind="css: {disabled: backups.currentPage() === backups.lastPage()}"><a href="javascript:void(0)" data-bind="click: backups.nextPage">»</a></li>
+        <li data-bind="css: {disabled: backups.currentPage() === backups.lastPage()}"><a href="javascript:void(0)"
+            data-bind="click: backups.nextPage">»</a></li>
       </ul>
     </div>
     <div class="klipper-fluid-item-3">

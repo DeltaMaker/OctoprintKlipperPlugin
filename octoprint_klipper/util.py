@@ -11,7 +11,7 @@ def file_exist(self, filepath):
     from os import path
     if not path.isfile(filepath):
         send_message(self, "PopUp", "warning", "OctoKlipper Settings",
-                          "Klipper " + filepath + " does not exist!")
+                          "File: <br />" + filepath + "<br /> does not exist!")
         return False
     else:
         return True

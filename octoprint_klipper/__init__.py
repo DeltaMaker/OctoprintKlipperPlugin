@@ -296,11 +296,11 @@ class KlipperPlugin(
                 custom_bindings=True
             ),
             dict(type="sidebar",
-                 custom_bindings=True,
-                 icon="rocket",
-                 replaces="connection" if self._settings.get_boolean(
-                     ["connection", "replace_connection_panel"]) else ""
-                 ),
+                custom_bindings=True,
+                icon="rocket",
+                replaces="connection" if self._settings.get_boolean(
+                    ["connection", "replace_connection_panel"]) else ""
+            ),
             dict(
                 type="generic",
                 name="Performance Graph",
@@ -439,6 +439,25 @@ class KlipperPlugin(
     def is_blueprint_protected(self):
         return False
 
+    def route_hook(self, server_routes, *args, **kwargs):
+        from octoprint.server.util.tornado import LargeResponseHandler, path_validation_factory
+        from octoprint.util import is_hidden_path
+        configpath = os.path.expanduser(
+                        self._settings.get(["configuration", "configpath"])
+                    )
+        bak_path = os.path.join(self.get_plugin_data_folder(), "configs", "")
+
+        return [
+            (r"/download/(.*)", LargeResponseHandler, dict(path=configpath,
+                                                           as_attachment=True,
+                                                           path_validation=path_validation_factory(lambda path: not is_hidden_path(path),
+                                                                                                   status_code=404))),
+            (r"/download/backup(.*)", LargeResponseHandler, dict(path=bak_path,
+                                                           as_attachment=True,
+                                                           path_validation=path_validation_factory(lambda path: not is_hidden_path(path),
+                                                                                                   status_code=404)))
+        ]
+
     # API for Backups
     # Get Content of a Backupconfig
     @octoprint.plugin.BlueprintPlugin.route("/backup/<filename>", methods=["GET"])
@@ -447,8 +466,8 @@ class KlipperPlugin(
     def get_backup(self, filename):
         data_folder = self.get_plugin_data_folder()
         full_path = os.path.realpath(os.path.join(data_folder, "configs", filename))
-        content = cfgUtils.get_cfg(self, full_path)
-        return flask.jsonify(content=content)
+        response = cfgUtils.get_cfg(self, full_path)
+        return flask.jsonify(response = response)
 
     # Delete a Backupconfig
     @octoprint.plugin.BlueprintPlugin.route("/backup/<filename>", methods=["DELETE"])
@@ -475,7 +494,7 @@ class KlipperPlugin(
     @Permissions.PLUGIN_KLIPPER_CONFIG.require(403)
     def list_backups(self):
         files = cfgUtils.list_cfg_files(self, "backup")
-        return flask.jsonify(files=files)
+        return flask.jsonify(files = files)
 
     # restore a backuped configfile
     @octoprint.plugin.BlueprintPlugin.route("/backup/restore/<filename>", methods=["GET"])
@@ -487,7 +506,7 @@ class KlipperPlugin(
                     )
         data_folder = self.get_plugin_data_folder()
         backupfile = os.path.realpath(os.path.join(data_folder, "configs", filename))
-        return flask.jsonify(restored=cfgUtils.copy_cfg(self, backupfile, configpath))
+        return flask.jsonify(restored = cfgUtils.copy_cfg(self, backupfile, configpath))
 
     # API for Configs
     # Get Content of a Configfile
@@ -499,8 +518,8 @@ class KlipperPlugin(
             self._settings.get(["configuration", "configpath"])
         )
         full_path = os.path.realpath(os.path.join(cfg_path, filename))
-        content = cfgUtils.get_cfg(self, full_path)
-        return flask.jsonify(content=content)
+        response = cfgUtils.get_cfg(self, full_path)
+        return flask.jsonify(response = response)
 
     # Delete a Configfile
     @octoprint.plugin.BlueprintPlugin.route("/config/<filename>", methods=["DELETE"])
@@ -529,7 +548,7 @@ class KlipperPlugin(
     @Permissions.PLUGIN_KLIPPER_CONFIG.require(403)
     def list_configs(self):
         files = cfgUtils.list_cfg_files(self, "")
-        return flask.jsonify(files=files, max_upload_size=MAX_UPLOAD_SIZE)
+        return flask.jsonify(files = files, max_upload_size = MAX_UPLOAD_SIZE)
 
     # check syntax of a given data
     @octoprint.plugin.BlueprintPlugin.route("/config/check", methods=["POST"])
@@ -538,7 +557,8 @@ class KlipperPlugin(
     def check_config(self):
         data = flask.request.json
         data_to_check = data.get("DataToCheck", [])
-        return flask.jsonify(check=cfgUtils.check_cfg(self, data_to_check))
+        response = cfgUtils.check_cfg(self, data_to_check)
+        return flask.jsonify(is_syntax_ok = response)
 
     # save a configfile
     @octoprint.plugin.BlueprintPlugin.route("/config/save", methods=["POST"])
@@ -555,7 +575,9 @@ class KlipperPlugin(
                 description="Invalid request, the filename is not set",
             )
         saved = cfgUtils.save_cfg(self, Filecontent, filename)
-        return flask.jsonify(saved=saved)
+        if saved == True:
+            util.send_message(self, "reload", "configlist", "", "")
+        return flask.jsonify(saved = saved)
 
     # APIs end
 
@@ -591,6 +613,7 @@ def __plugin_load__():
     global __plugin_hooks__
     __plugin_implementation__ = KlipperPlugin()
     __plugin_hooks__ = {
+        "octoprint.server.http.routes": __plugin_implementation__.route_hook,
         "octoprint.access.permissions": __plugin_implementation__.get_additional_permissions,
         "octoprint.comm.protocol.gcode.received": __plugin_implementation__.on_parse_gcode,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information

@@ -116,7 +116,7 @@ ul#klipper-settings {
 
 .klipper-column-fluid {
    display: flex;
-   flex-flow: column wrap;
+   flex-flow: column nowrap;
    align-items: stretch;
 }
 
@@ -152,8 +152,10 @@ div#klipper_backups_dialog div.modal-body textarea {
    margin-bottom: 0px !important;
    padding-left: 0px !important;
    padding-right: 0px !important;
+   box-sizing: border-box;
    width: 100%;
    height: 100%;
+   height: -webkit-fill-available;
 }
 
 /* UIcustomizer fix */
@@ -188,33 +190,67 @@ div#settings_plugin_klipper div.tab-content div#conf.tab-pane {
    width: 100%;
 }
 
-div#settings_plugin_klipper div.tab-content div#conf.tab-pane div.control-group , div#klipper_editor div.control-group{
+div#settings_plugin_klipper div.tab-content div#conf.tab-pane div.control-group {
    height: 100%;
    margin: 0;
    display: flex;
    flex-direction: column;
 }
 
-div#klipper_editor div.control-group div.editor-controls{
-   margin-bottom: 0px;
-   height: 26px;
+.klipper-settings-tab {
+   height: 100%;
+   width: 100%;
 }
 
-div#klipper_editor div.control-group div.conf-editor {
-   height: 95%;
-   height: calc(100% - 28px);
+#settings_plugin_klipper .m-0 {
+   margin: 0;
+}
+
+#settings_plugin_klipper .scroll-y {
+   overflow-y: scroll;
+}
+
+#settings_plugin_klipper table {
+   table-layout: unset !important;
+}
+
+#settings_plugin_klipper .table-fixed thead th {
+   position: sticky;
+   top: 0;
+   background-color: rgba(12, 5, 5, 0.85);
+   color:rgb(200, 200, 200);
+ }
+
+th.klipper_cfgs_checkbox {
+   width: 25px;
+}
+
+#settings_plugin_klipper .pagination-mini {
+   margin: 5;
+}
+
+div#klipper_editor .modal-body {
+   overflow: auto;
+   min-height: 600px;
+}
+
+div#klipper_editor div.conf-editor {
    width: 99%;
    width: calc(100% - 4px);
    margin-top: 5px;
-   flex: 1 1;
    overflow: auto;
+   max-height: 500px;
 }
 
 div#klipper_editor div.conf-editor div#plugin-klipper-config {
    font-family: monospace;
    overflow: auto;
-   height: 100%;
-   height: -webkit-fill-available;
+}
+
+.ace_editor {
+   margin: auto;
+   height: 200px;
+   width: 100%;
 }
 
 /* div#settings_plugin_klipper.tab-pane.active form.form-horizontal div.tab-content div#conf.tab-pane.active button.btn.btn-small ,div#klipper_editor button.btn.btn-small{
@@ -252,11 +288,11 @@ div#settings_plugin_klipper.tab-pane.active form.form-horizontal div.tab-content
 }
 
 #klipper_graph_dialog {
-   width: 1050px;
+   width: 90%;
 }
 
 #klipper_graph_dialog .full-sized-box{
-   width: 1000px;
+   width: 100%;
    margin: 0 auto;
 }
 

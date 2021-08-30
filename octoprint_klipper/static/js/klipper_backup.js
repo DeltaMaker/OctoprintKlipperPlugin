@@ -94,7 +94,7 @@ $(function() {
 
          OctoPrint.plugins.klipper.getCfgBak(backup)
             .done(function (response) {
-               self.CfgContent(response.content)
+               self.CfgContent(response.response.config)
             });
       };
 

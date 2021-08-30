@@ -14,239 +14,240 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 $(function () {
-   function KlipperViewModel(parameters) {
-      var self = this;
+  function KlipperViewModel(parameters) {
+    var self = this;
 
-      self.header = OctoPrint.getRequestHeaders({
-         "content-type": "application/json",
-         "cache-control": "no-cache",
+    self.header = OctoPrint.getRequestHeaders({
+      "content-type": "application/json",
+      "cache-control": "no-cache",
+    });
+
+    self.apiUrl = OctoPrint.getSimpleApiUrl("klipper");
+    self.Url = OctoPrint.getBlueprintUrl("klipper");
+
+    self.settings = parameters[0];
+    self.loginState = parameters[1];
+    self.connectionState = parameters[2];
+    self.levelingViewModel = parameters[3];
+    self.paramMacroViewModel = parameters[4];
+    self.access = parameters[5];
+
+    self.shortStatus_navbar = ko.observable();
+    self.shortStatus_sidebar = ko.observable();
+    self.logMessages = ko.observableArray();
+
+    self.showPopUp = function (popupType, popupTitle, message) {
+      var title = popupType.toUpperCase() + ":  " + popupTitle;
+      new PNotify({
+        title: title,
+        text: message,
+        type: popupType,
+        hide: false,
+        icon: true
       });
+    };
 
-      self.apiUrl = OctoPrint.getSimpleApiUrl("klipper");
-      self.Url = OctoPrint.getBlueprintUrl("klipper");
+    self.onSettingsShown = function () {
+      //self.reloadConfig();
+    };
 
-      self.settings = parameters[0];
-      self.loginState = parameters[1];
-      self.connectionState = parameters[2];
-      self.levelingViewModel = parameters[3];
-      self.paramMacroViewModel = parameters[4];
-      self.access = parameters[5];
+    self.showLevelingDialog = function () {
+      var dialog = $("#klipper_leveling_dialog");
+      dialog.modal({
+        show: "true",
+        backdrop: "static",
+        keyboard: false,
+      });
+      self.levelingViewModel.initView();
+    };
 
-      self.shortStatus_navbar = ko.observable();
-      self.shortStatus_sidebar = ko.observable();
-      self.logMessages = ko.observableArray();
+    self.showPidTuningDialog = function () {
+      var dialog = $("#klipper_pid_tuning_dialog");
+      dialog.modal({
+        show: "true",
+        backdrop: "static",
+        keyboard: false,
+      });
+    };
 
-      self.showPopUp = function (popupType, popupTitle, message) {
-         var title = popupType.toUpperCase() + ":  " + popupTitle;
-         new PNotify({
-            title: title,
-            text: message,
-            type: popupType,
-            hide: false,
-         });
-      };
+    self.showOffsetDialog = function () {
+      var dialog = $("#klipper_offset_dialog");
+      dialog.modal({
+        show: "true",
+        backdrop: "static",
+      });
+    };
 
-      self.onSettingsShown = function () {
-         //self.reloadConfig();
-      };
+    self.showGraphDialog = function () {
+      var dialog = $("#klipper_graph_dialog");
+      dialog.modal({
+        show: "true",
+        minHeight: "500px",
+        maxHeight: "600px",
+      });
+    };
 
-      self.showLevelingDialog = function () {
-         var dialog = $("#klipper_leveling_dialog");
-         dialog.modal({
-            show: "true",
-            backdrop: "static",
-            keyboard: false,
-         });
-         self.levelingViewModel.initView();
-      };
+    self.executeMacro = function (macro) {
+      var paramObjRegex = /{(.*?)}/g;
 
-      self.showPidTuningDialog = function () {
-         var dialog = $("#klipper_pid_tuning_dialog");
-         dialog.modal({
-            show: "true",
-            backdrop: "static",
-            keyboard: false,
-         });
-      };
+      if (!self.hasRight("MACRO")) return;
 
-      self.showOffsetDialog = function () {
-         var dialog = $("#klipper_offset_dialog");
-         dialog.modal({
-            show: "true",
-            backdrop: "static",
-         });
-      };
+      if (macro.macro().match(paramObjRegex) == null) {
+        OctoPrint.control.sendGcode(
+          // Use .split to create an array of strings which is sent to
+          // OctoPrint.control.sendGcode instead of a single string.
+          macro.macro().split(/\r\n|\r|\n/)
+        );
+      } else {
+        self.paramMacroViewModel.process(macro);
 
-      self.showGraphDialog = function () {
-         var dialog = $("#klipper_graph_dialog");
-         dialog.modal({
-            show: "true",
-            minHeight: "500px",
-            maxHeight: "600px",
-         });
-      };
+        var dialog = $("#klipper_macro_dialog");
+        dialog.modal({
+          show: "true",
+          backdrop: "static",
+        });
+      }
+    };
 
-      self.executeMacro = function (macro) {
-         var paramObjRegex = /{(.*?)}/g;
+    self.navbarClicked = function () {
+      $("#tab_plugin_klipper_main_link").find("a").click();
+    };
 
-         if (!self.hasRight("MACRO")) return;
+    self.onGetStatus = function () {
+      OctoPrint.control.sendGcode("Status");
+    };
 
-         if (macro.macro().match(paramObjRegex) == null) {
-            OctoPrint.control.sendGcode(
-               // Use .split to create an array of strings which is sent to
-               // OctoPrint.control.sendGcode instead of a single string.
-               macro.macro().split(/\r\n|\r|\n/)
-            );
-         } else {
-            self.paramMacroViewModel.process(macro);
+    self.onRestartFirmware = function () {
+      OctoPrint.control.sendGcode("FIRMWARE_RESTART");
+    };
 
-            var dialog = $("#klipper_macro_dialog");
-            dialog.modal({
-               show: "true",
-               backdrop: "static",
-            });
-         }
-      };
+    self.onRestartHost = function () {
+      OctoPrint.control.sendGcode("RESTART");
+    };
 
-      self.navbarClicked = function () {
-         $("#tab_plugin_klipper_main_link").find("a").click();
-      };
+    self.onAfterBinding = function () {
+      self.connectionState.selectedPort(
+        self.settings.settings.plugins.klipper.connection.port()
+      );
+    };
 
-      self.onGetStatus = function () {
-         OctoPrint.control.sendGcode("Status");
-      };
-
-      self.onRestartFirmware = function () {
-         OctoPrint.control.sendGcode("FIRMWARE_RESTART");
-      };
-
-      self.onRestartHost = function () {
-         OctoPrint.control.sendGcode("RESTART");
-      };
-
-      self.onAfterBinding = function () {
-         self.connectionState.selectedPort(
-            self.settings.settings.plugins.klipper.connection.port()
-         );
-      };
-
-      self.onDataUpdaterPluginMessage = function (plugin, data) {
-         if (plugin == "klipper") {
-            switch (data.type) {
-               case "PopUp":
-                  self.showPopUp(data.subtype, data.title, data.payload);
-                  break;
-               case "reload":
-                  break;
-               case "console":
-                  self.consoleMessage(data.subtype, data.payload);
-                  break;
-               case "status":
-                  if (data.payload.length > 36) {
-                     var shortText = data.payload.substring(0, 31) + " [..]";
-                     self.shortStatus_navbar(shortText);
-                  } else {
-                     self.shortStatus_navbar(data.payload);
-                  }
-                  self.shortStatus_sidebar(data.payload);
-                  break;
-               default:
-                  self.logMessage(data.time, data.subtype, data.payload);
-                  self.consoleMessage(data.subtype, data.payload);
-            }
-         }
-      };
-
-      self.logMessage = function (timestamp, type = "info", message) {
-         if (!timestamp) {
-            var today = new Date();
-            var timestamp =
-               today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-         }
-         self.logMessages.push({
-            time: timestamp,
-            type: type,
-            msg: message.replace(/\n/gi, "<br>"),
-         });
-      };
-
-      self.consoleMessage = function (type, message) {
-         if (
-            self.settings.settings.plugins.klipper.configuration.debug_logging() === true
-         ) {
-            if (type == "info") {
-               console.info("OctoKlipper : " + message);
-            } else if (type == "debug") {
-               console.debug("OctoKlipper : " + message);
+    self.onDataUpdaterPluginMessage = function (plugin, data) {
+      if (plugin == "klipper") {
+        switch (data.type) {
+          case "PopUp":
+            self.showPopUp(data.subtype, data.title, data.payload);
+            break;
+          case "reload":
+            break;
+          case "console":
+            self.consoleMessage(data.subtype, data.payload);
+            break;
+          case "status":
+            if (data.payload.length > 36) {
+              var shortText = data.payload.substring(0, 31) + " [..]";
+              self.shortStatus_navbar(shortText);
             } else {
-               console.error("OctoKlipper : " + message);
+              self.shortStatus_navbar(data.payload);
             }
-         }
-         return;
-      };
+            self.shortStatus_sidebar(data.payload);
+            break;
+          default:
+            self.logMessage(data.time, data.subtype, data.payload);
+            self.consoleMessage(data.subtype, data.payload);
+        }
+      }
+    };
 
-      self.onClearLog = function () {
-         self.logMessages.removeAll();
-      };
+    self.logMessage = function (timestamp, type = "info", message) {
+      if (!timestamp) {
+        var today = new Date();
+        var timestamp =
+          today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      }
+      self.logMessages.push({
+        time: timestamp,
+        type: type,
+        msg: message.replace(/\n/gi, "<br />"),
+      });
+    };
 
-      self.isActive = function () {
-         return self.connectionState.isOperational();
-      };
+    self.consoleMessage = function (type, message) {
+      if (
+        self.settings.settings.plugins.klipper.configuration.debug_logging() === true
+      ) {
+        if (type == "info") {
+          console.info("OctoKlipper : " + message);
+        } else if (type == "debug") {
+          console.debug("OctoKlipper : " + message);
+        } else {
+          console.error("OctoKlipper : " + message);
+        }
+      }
+      return;
+    };
 
-      self.hasRight = function (right_role) {
-         //if (self.loginState.isAdmin) return true;
-         if (right_role == "CONFIG") {
-            return self.loginState.hasPermission(
-               self.access.permissions.PLUGIN_KLIPPER_CONFIG
-            );
-         } else if (right_role == "MACRO") {
-            return self.loginState.hasPermission(
-               self.access.permissions.PLUGIN_KLIPPER_MACRO
-            );
-         }
-      };
+    self.onClearLog = function () {
+      self.logMessages.removeAll();
+    };
 
-      self.hasRightKo = function (right_role) {
-         //if (self.loginState.isAdmin) return true;
-         if (right_role == "CONFIG") {
-            return self.loginState.hasPermissionKo(
-               self.access.permissions.PLUGIN_KLIPPER_CONFIG
-            );
-         } else if (right_role == "MACRO") {
-            return self.loginState.hasPermissionKo(
-               self.access.permissions.PLUGIN_KLIPPER_MACRO
-            );
-         }
-      };
+    self.isActive = function () {
+      return self.connectionState.isOperational();
+    };
 
-      // OctoKlipper settings link
-      self.openOctoKlipperSettings = function (profile_type) {
-         self.consoleMessage("debug", ": openOctoKlipperSettings :");
-         if (!self.hasRight("CONFIG")) return;
-         self.consoleMessage("debug", ": openOctoKlipperSettings : Access okay");
-         $("a#navbar_show_settings").click();
-         $("li#settings_plugin_klipper_link a").click();
-         if (profile_type) {
-            var query = "#klipper-settings a[data-profile-type='" + profile_type + "']";
-            $(query).click();
-         }
-      };
-   }
+    self.hasRight = function (right_role) {
+      //if (self.loginState.isAdmin) return true;
+      if (right_role == "CONFIG") {
+        return self.loginState.hasPermission(
+          self.access.permissions.PLUGIN_KLIPPER_CONFIG
+        );
+      } else if (right_role == "MACRO") {
+        return self.loginState.hasPermission(
+          self.access.permissions.PLUGIN_KLIPPER_MACRO
+        );
+      }
+    };
 
-   OCTOPRINT_VIEWMODELS.push({
-      construct: KlipperViewModel,
-      dependencies: [
-         "settingsViewModel",
-         "loginStateViewModel",
-         "connectionViewModel",
-         "klipperLevelingViewModel",
-         "klipperMacroDialogViewModel",
-         "accessViewModel",
-      ],
-      elements: [
-         "#tab_plugin_klipper_main",
-         "#sidebar_plugin_klipper",
-         "#navbar_plugin_klipper",
-      ],
-   });
+    self.hasRightKo = function (right_role) {
+      //if (self.loginState.isAdmin) return true;
+      if (right_role == "CONFIG") {
+        return self.loginState.hasPermissionKo(
+          self.access.permissions.PLUGIN_KLIPPER_CONFIG
+        );
+      } else if (right_role == "MACRO") {
+        return self.loginState.hasPermissionKo(
+          self.access.permissions.PLUGIN_KLIPPER_MACRO
+        );
+      }
+    };
+
+    // OctoKlipper settings link
+    self.openOctoKlipperSettings = function (profile_type) {
+      self.consoleMessage("debug", ": openOctoKlipperSettings :");
+      if (!self.hasRight("CONFIG")) return;
+      self.consoleMessage("debug", ": openOctoKlipperSettings : Access okay");
+      $("a#navbar_show_settings").click();
+      $("li#settings_plugin_klipper_link a").click();
+      if (profile_type) {
+        var query = "#klipper-settings a[data-profile-type='" + profile_type + "']";
+        $(query).click();
+      }
+    };
+  }
+
+  OCTOPRINT_VIEWMODELS.push({
+    construct: KlipperViewModel,
+    dependencies: [
+      "settingsViewModel",
+      "loginStateViewModel",
+      "connectionViewModel",
+      "klipperLevelingViewModel",
+      "klipperMacroDialogViewModel",
+      "accessViewModel",
+    ],
+    elements: [
+      "#tab_plugin_klipper_main",
+      "#sidebar_plugin_klipper",
+      "#navbar_plugin_klipper",
+    ],
+  });
 });

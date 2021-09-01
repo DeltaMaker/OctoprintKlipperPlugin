@@ -210,7 +210,6 @@ $(function () {
       editorDialog.modal({
         show: "true",
         backdrop: "static",
-        minHeight: "600px",
       });
     };
 
@@ -228,7 +227,6 @@ $(function () {
         editorDialog.modal({
           show: "true",
           backdrop: "static",
-          minHeight: "600px",
         });
       });
     };

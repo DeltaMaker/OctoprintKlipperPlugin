@@ -7,39 +7,39 @@
     <script src="plugin/klipper/static/js/lib/ace/ace.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="plugin/klipper/static/js/lib/ace/theme-monokai.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="plugin/klipper/static/js/lib/ace/mode-klipper_config.js" type="text/javascript"></script>
-    <span class="control-label">Filename:</span>
-    <input type="text" data-bind="value: CfgFilename">
-    <label class="checkbox">
-      <input class="inline-checkbox" type="checkbox" data-bind="checked: settings.settings.plugins.klipper.configuration.parse_check">
-      {{ _('Check parsing on save') }}
-    </label>
-    <div class="klipper-btn-group">
-      <button class="btn btn-small" data-bind="click: saveCfg" title="{{ _('Save Config') }}">
-        <i class="fas fa-disk"></i> {{ _('Save Config') }}
-      </button>
-      <button class="btn btn-small" data-bind="click: loadLastSession" title="{{ _('Reload last version') }}">
-        <i class="fas fa-redo"></i> {{ _('Reload last version') }}
-      </button>
-      <button class="btn btn-small" data-bind="click: reloadFromFile" title="{{ _('Reload from file') }}">
-        <i class="fas fa-upload"></i> {{ _('Reload from file') }}
-      </button>
-      <button class="btn btn-small" data-bind="click: checkSyntax" title="{{ _('Check Syntax') }}">
-        <i class="fas fa-spell-check"></i> {{ _('Check Syntax') }}
-      </button>
+    <div class="editor-controls">
+      <span class="control-label">Filename:</span>
+      <input type="text" data-bind="value: CfgFilename">
+      <div class="klipper-btn-group">
+        <button class="btn btn-small" data-bind="click: saveCfg" title="{{ _('Save Config') }}">
+          <i class="fas fa-save"></i> {{ _('Save Config') }}
+        </button>
+        <button class="btn btn-small" data-bind="click: loadLastSession" title="{{ _('Reload last version') }}">
+          <i class="fas fa-redo"></i> {{ _('Reload last version') }}
+        </button>
+        <button class="btn btn-small" data-bind="click: reloadFromFile" title="{{ _('Reload from file') }}">
+          <i class="fas fa-upload"></i> {{ _('Reload from file') }}
+        </button>
+        <button class="btn btn-small" data-bind="click: checkSyntax" title="{{ _('Check Syntax') }}">
+          <i class="fas fa-spell-check"></i> {{ _('Check Syntax') }}
+        </button>
+      </div>
+      <span class="pull-right">
+        <label class="checkbox">
+          <input class="inline-checkbox" type="checkbox" data-bind="checked: settings.settings.plugins.klipper.configuration.parse_check">
+          {{ _('Check parsing on save') }}
+        </label>
+        <a href='#' style="text-decoration: none;" data-bind="click: minusFontsize" title="{{ _('Decrease Fontsize') }}">
+          <i class="fas fa-search-minus"></i>
+        </a>
+        <a href='#' style="text-decoration: none;" data-bind="click: plusFontsize" title="{{ _('Increase Fontsize') }}">
+          <i class="fas fa-search-plus"></i>
+        </a>
+      </span>
     </div>
-    <span class="pull-right">
-      <a href='#' style="text-decoration: none;" data-bind="click: minusFontsize" title="{{ _('Decrease Fontsize') }}">
-        <i class="fas fa-search-minus"></i>
-      </a>
-      <a href='#' style="text-decoration: none;" data-bind="click: plusFontsize" title="{{ _('Increase Fontsize') }}">
-        <i class="fas fa-search-plus"></i>
-      </a>
-    </span>
-    <div class="conf-editor">
+    <div class="conf-editor" id="conf_editor">
       <input id="hdnLoadKlipperConfig" type="hidden" data-bind="value: configBound(CfgContent)">
       <div id="plugin-klipper-config"></div>
     </div>
-  </div>
-  <div class="modal-footer">
   </div>
 </div>

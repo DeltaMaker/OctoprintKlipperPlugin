@@ -40,6 +40,16 @@ $(function () {
         editor.session.setValue(config.content);
         editor.clearSelection();
       }
+      setInterval(function () {
+        if (editor) {
+
+
+            var modalbodyheight = $('#klipper_editor').height();
+            //$('#conf_editor').height( modalbodyheight - 135 );
+            editor.resize();
+
+        };
+      }, 500);
     };
 
     self.checkSyntax = function () {
@@ -214,14 +224,6 @@ $(function () {
         }
       });
     };
-
-    // Uncomment this if not using maxLines: "Infinity"...
-    setInterval(function () {
-      if (editor) {
-        editor.resize();
-      };
-    }, 1000);
-
   }
 
   OCTOPRINT_VIEWMODELS.push({

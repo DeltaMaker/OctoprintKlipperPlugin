@@ -220,6 +220,9 @@
         <h3 class="text-center m-0">{{ _('Config Files') }}</h3>
         <div class="klipper-row-fluid">
           <div class="klipper-fluid-item-2" data-bind="visible: $root.klipperViewModel.hasRightKo('CONFIG')">
+            <button class="btn btn-small" data-bind="click: newFile" title="{{ _('Add new File') }}">
+              <i class="far fa-file"></i> {{ _('New File') }}
+            </button>
             <button class="btn btn-small" data-bind="click: listCfgFiles" title="{{ _('Refresh file list') }}">
               <i class="icon-refresh"></i> {{ _('Refresh Files') }}
             </button>

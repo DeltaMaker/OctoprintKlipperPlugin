@@ -229,6 +229,21 @@ $(function () {
       });
     };
 
+    self.newFile = function () {
+      if (!self.klipperViewModel.hasRight("CONFIG")) return;
+      var config = {
+        content: "",
+        file: "Change Filename"
+      }
+      self.klipperEditorViewModel.process(config);
+      var editorDialog = $("#klipper_editor");
+      editorDialog.modal({
+        show: "true",
+        backdrop: "static",
+        minHeight: "600px",
+      });
+    };
+
     self.showEditUserDialog = function (file) {
       if (!self.klipperViewModel.hasRight("CONFIG")) return;
 
@@ -236,7 +251,7 @@ $(function () {
         .done(function (response) {
           var config = {
             content: response.response.config,
-            file: file,
+            file: file
           }
           self.klipperEditorViewModel.process(config);
 

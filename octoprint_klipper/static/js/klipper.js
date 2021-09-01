@@ -47,10 +47,6 @@ $(function () {
       });
     };
 
-    self.onSettingsShown = function () {
-      //self.reloadConfig();
-    };
-
     self.showLevelingDialog = function () {
       var dialog = $("#klipper_leveling_dialog");
       dialog.modal({

@@ -153,9 +153,9 @@ div#klipper_backups_dialog div.modal-body textarea {
    padding-left: 0px !important;
    padding-right: 0px !important;
    box-sizing: border-box;
-   width: 100%;
-   height: 100%;
    height: -webkit-fill-available;
+   resize: none;
+   width: 100%
 }
 
 /* UIcustomizer fix */
@@ -221,10 +221,6 @@ div#settings_plugin_klipper div.tab-content div#conf.tab-pane div.control-group 
    color:rgb(200, 200, 200);
  }
 
-th.klipper_cfgs_checkbox {
-   width: 25px;
-}
-
 #settings_plugin_klipper .pagination-mini {
    margin: 5;
 }
@@ -232,6 +228,23 @@ th.klipper_cfgs_checkbox {
 div#klipper_editor .modal-body {
    overflow: auto;
    min-height: 600px;
+}
+
+.klipper-btn-group {
+  display: inline-block;
+}
+
+div#klipper_editor .modal-body label.checkbox{
+  display: unset;
+}
+
+div#klipper_editor .modal-body input[type=text]{
+  margin-bottom: 0px !important;
+}
+
+div#klipper_editor .modal-body input[type=checkbox] {
+  float: unset;
+  margin-left: unset;
 }
 
 div#klipper_editor div.conf-editor {

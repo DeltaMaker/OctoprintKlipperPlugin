@@ -13,326 +13,285 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-$(function() {
+$(function () {
+  function KlipperBackupViewModel(parameters) {
+    var self = this;
 
-   function KlipperBackupViewModel(parameters) {
-      var self = this;
+    self.loginState = parameters[0];
+    self.klipperViewModel = parameters[1];
+    self.access = parameters[2];
 
-      self.loginState = parameters[0];
-      self.klipperViewModel = parameters[1];
-      self.access = parameters[2];
+    self.header = OctoPrint.getRequestHeaders({
+      "content-type": "application/json",
+      "cache-control": "no-cache",
+    });
 
-      self.header = OctoPrint.getRequestHeaders({
-         "content-type": "application/json",
-         "cache-control": "no-cache"
+    self.apiUrl = OctoPrint.getSimpleApiUrl("klipper");
+    self.Url = OctoPrint.getBlueprintUrl("klipper");
+
+    self.markedForFileRestore = ko.observableArray([]);
+
+    self.CfgContent = ko.observable();
+
+    //uploads
+    self.maxUploadSize = ko.observable(0);
+    self.backupUploadData = undefined;
+    self.backupUploadName = ko.observable();
+    self.isAboveUploadSize = function (data) {
+      return data.size > self.maxUploadSize();
+    };
+
+    self.onStartupComplete = function () {
+      if (self.loginState.loggedIn()) {
+        self.listBakFiles();
+      }
+    };
+
+    // initialize list helper
+    self.backups = new ItemListHelper(
+      "klipperBakFiles",
+      {
+        name: function (a, b) {
+          // sorts ascending
+          if (a["name"].toLocaleLowerCase() < b["name"].toLocaleLowerCase()) return -1;
+          if (a["name"].toLocaleLowerCase() > b["name"].toLocaleLowerCase()) return 1;
+          return 0;
+        },
+        date: function (a, b) {
+          // sorts descending
+          if (a["date"] > b["date"]) return -1;
+          if (a["date"] < b["date"]) return 1;
+          return 0;
+        },
+        size: function (a, b) {
+          // sorts descending
+          if (a["bytes"] > b["bytes"]) return -1;
+          if (a["bytes"] < b["bytes"]) return 1;
+          return 0;
+        },
+      },
+      {},
+      "name",
+      [],
+      [],
+      5
+    );
+
+    self.listBakFiles = function () {
+      self.klipperViewModel.consoleMessage("debug", "listBakFiles:");
+
+      OctoPrint.plugins.klipper.listCfgBak()
+        .done(function (response) {
+          self.klipperViewModel.consoleMessage("debug", "listBakFilesdone: " + response);
+          self.backups.updateItems(response.files);
+          self.backups.resetPage();
+        });
+    };
+
+    self.showCfg = function (backup) {
+      if (!self.loginState.hasPermission(self.access.permissions.PLUGIN_KLIPPER_CONFIG)) return;
+
+      OctoPrint.plugins.klipper.getCfgBak(backup).done(function (response) {
+        $('#klipper_backups_dialog textarea').attr('rows', response.response.config.split(/\r\n|\r|\n/).length);
+        self.CfgContent(response.response.config);
+      });
+    };
+
+    self.removeCfg = function (backup) {
+      if (!self.loginState.hasPermission(self.access.permissions.PLUGIN_KLIPPER_CONFIG)) return;
+
+      var perform = function () {
+        OctoPrint.plugins.klipper
+          .deleteBackup(backup)
+          .done(function () {
+            self.listBakFiles();
+          })
+          .fail(function (response) {
+            var html = "<p>" + _.sprintf(gettext("Failed to remove config %(name)s.</p><p>Please consult octoprint.log for details.</p>"), { name: _.escape(backup) });
+            html += pnotifyAdditionalInfo('<pre style="overflow: auto">' + _.escape(response.responseText) + "</pre>");
+            new PNotify({
+              title: gettext("Could not remove config"),
+              text: html,
+              type: "error",
+              hide: false,
+            });
+          });
+      };
+
+      showConfirmationDialog(
+        _.sprintf(gettext('You are about to delete backuped config file "%(name)s".'), {
+          name: _.escape(backup),
+        }),
+        perform
+      );
+    };
+
+    self.restoreBak = function (backup) {
+      if (!self.loginState.hasPermission(self.access.permissions.PLUGIN_KLIPPER_CONFIG)) return;
+
+      var restore = function () {
+        OctoPrint.plugins.klipper.restoreBackup(backup).done(function (response) {
+          self.klipperViewModel.consoleMessage("debug", "restoreCfg: " + response.text);
+        });
+      };
+
+      var html = "<p>" + gettext("This will overwrite any file with the same name on the configpath.") + "</p>" + "<p>" + backup + "</p>";
+
+      showConfirmationDialog({
+        title: gettext("Are you sure you want to restore now?"),
+        html: html,
+        proceed: gettext("Proceed"),
+        onproceed: restore(),
+      });
+    };
+
+    self.markFilesOnPage = function () {
+      self.markedForFileRestore(_.uniq(self.markedForFileRestore().concat(_.map(self.backups.paginatedItems(), "file"))));
+    };
+
+    self.markAllFiles = function () {
+      self.markedForFileRestore(_.map(self.backups.allItems, "file"));
+    };
+
+    self.clearMarkedFiles = function () {
+      self.markedForFileRestore.removeAll();
+    };
+
+    self.restoreMarkedFiles = function () {
+      var perform = function () {
+        self._bulkRestore(self.markedForFileRestore()).done(function () {
+          self.markedForFileRestore.removeAll();
+        });
+      };
+
+      showConfirmationDialog(
+        _.sprintf(gettext("You are about to restore %(count)d backuped config files."), {
+          count: self.markedForFileRestore().length,
+        }),
+        perform
+      );
+    };
+
+    self.removeMarkedFiles = function () {
+      var perform = function () {
+        self._bulkRemove(self.markedForFileRestore()).done(function () {
+          self.markedForFileRestore.removeAll();
+        });
+      };
+
+      showConfirmationDialog(
+        _.sprintf(gettext("You are about to delete %(count)d backuped config files."), {
+          count: self.markedForFileRestore().length,
+        }),
+        perform
+      );
+    };
+
+    self._bulkRestore = function (files) {
+      var title, message, handler;
+
+      title = gettext("Restoring klipper config files");
+      self.klipperViewModel.consoleMessage("debug", title);
+      message = _.sprintf(gettext("Restoring %(count)d backuped config files..."), {
+        count: files.length,
       });
 
-      self.apiUrl = OctoPrint.getSimpleApiUrl("klipper");
-      self.Url = OctoPrint.getBlueprintUrl("klipper");
-
-      self.markedForFileRestore = ko.observableArray([]);
-
-      self.CfgContent = ko.observable();
-
-      //uploads
-      self.maxUploadSize = ko.observable(0);
-      self.backupUploadData = undefined;
-      self.backupUploadName = ko.observable();
-      self.isAboveUploadSize = function (data) {
-         return data.size > self.maxUploadSize();
-      };
-
-      self.onStartupComplete = function() {
-         if(self.loginState.loggedIn()) {
-            self.listBakFiles();
-         }
-      };
-
-      // initialize list helper
-      self.backups = new ItemListHelper(
-         "klipperBakFiles",
-         {
-            name: function (a, b) {
-               // sorts ascending
-               if (a["name"].toLocaleLowerCase() < b["name"].toLocaleLowerCase()) return -1;
-               if (a["name"].toLocaleLowerCase() > b["name"].toLocaleLowerCase()) return 1;
-               return 0;
-            },
-            date: function (a, b) {
-               // sorts descending
-               if (a["date"] > b["date"]) return -1;
-               if (a["date"] < b["date"]) return 1;
-               return 0;
-            },
-            size: function (a, b) {
-               // sorts descending
-               if (a["bytes"] > b["bytes"]) return -1;
-               if (a["bytes"] < b["bytes"]) return 1;
-               return 0;
-            }
-         },
-         {},
-         "name",
-         [],
-         [],
-         5
-      );
-
-      self.listBakFiles = function() {
-         self.klipperViewModel.consoleMessage("debug", "listBakFiles:");
-
-         OctoPrint.plugins.klipper.listCfgBak()
-            .done(function (response) {
-               self.klipperViewModel.consoleMessage("debug", "listBakFilesdone: " + response);
-               self.backups.updateItems(response.files);
-               self.backups.resetPage();
+      handler = function (filename) {
+        return OctoPrint.plugins.klipper
+          .restoreBackup(filename)
+          .done(function (response) {
+            deferred.notify(
+              _.sprintf(gettext("Restored %(filename)s..."), {
+                filename: _.escape(filename),
+              }),
+              true
+            );
+            self.klipperViewModel.consoleMessage("debug", "restoreCfg: " + response.text);
+            self.markedForFileRestore.remove(function (item) {
+              return item.name == filename;
             });
+          })
+          .fail(function () {
+            deferred.notify(_.sprintf(gettext("Restoring of %(filename)s failed, continuing..."), { filename: _.escape(filename) }), false);
+          });
       };
 
-      self.showCfg = function (backup) {
-         if (!self.loginState.hasPermission(self.access.permissions.PLUGIN_KLIPPER_CONFIG)) return;
+      var deferred = $.Deferred();
 
-         OctoPrint.plugins.klipper.getCfgBak(backup)
-            .done(function (response) {
-               self.CfgContent(response.response.config)
+      var promise = deferred.promise();
+
+      var options = {
+        title: title,
+        message: message,
+        max: files.length,
+        output: true,
+      };
+      showProgressModal(options, promise);
+
+      var requests = [];
+
+      _.each(files, function (filename) {
+        var request = handler(filename);
+        requests.push(request);
+      });
+
+      $.when.apply($, _.map(requests, wrapPromiseWithAlways)).done(function () {
+        deferred.resolve();
+      });
+
+      return promise;
+    };
+
+    self._bulkRemove = function (files) {
+      var title, message, handler;
+
+      title = gettext("Deleting backup files");
+      message = _.sprintf(gettext("Deleting %(count)d backup files..."), {
+        count: files.length,
+      });
+
+      handler = function (filename) {
+        return OctoPrint.plugins.klipper
+          .deleteBackup(filename)
+          .done(function () {
+            deferred.notify(_.sprintf(gettext("Deleted %(filename)s..."), { filename: _.escape(filename) }), true);
+            self.markedForFileRestore.remove(function (item) {
+              return item.name == filename;
             });
+          })
+          .fail(function () {
+            deferred.notify(_.sprintf(gettext("Deleting of %(filename)s failed, continuing..."), { filename: _.escape(filename) }), false);
+          });
       };
 
-      self.removeCfg = function (backup) {
-         if (!self.loginState.hasPermission(self.access.permissions.PLUGIN_KLIPPER_CONFIG)) return;
-
-         var perform = function () {
-            OctoPrint.plugins.klipper.deleteBackup(backup)
-               .done(function () {
-                  self.listBakFiles();
-               })
-               .fail(function (response) {
-                  var html =
-                     "<p>" +
-                     _.sprintf(
-                        gettext(
-                              "Failed to remove config %(name)s.</p><p>Please consult octoprint.log for details.</p>"
-                        ),
-                        {name: _.escape(backup)}
-                     );
-                  html += pnotifyAdditionalInfo(
-                     '<pre style="overflow: auto">' +
-                        _.escape(response.responseText) +
-                        "</pre>"
-                  );
-                  new PNotify({
-                     title: gettext("Could not remove config"),
-                     text: html,
-                     type: "error",
-                     hide: false
-                  });
-               });
-         };
-
-         showConfirmationDialog(
-            _.sprintf(gettext('You are about to delete backuped config file "%(name)s".'), {
-               name: _.escape(backup)
-            }),
-            perform
-         );
+      var deferred = $.Deferred();
+      var promise = deferred.promise();
+      var options = {
+        title: title,
+        message: message,
+        max: files.length,
+        output: true,
       };
+      showProgressModal(options, promise);
 
-      self.restoreBak = function(backup) {
-         if (!self.loginState.hasPermission(self.access.permissions.PLUGIN_KLIPPER_CONFIG)) return;
+      var requests = [];
+      _.each(files, function (filename) {
+        var request = handler(filename);
+        requests.push(request);
+      });
 
-         var restore = function () {
+      $.when.apply($, _.map(requests, wrapPromiseWithAlways)).done(function () {
+        deferred.resolve();
+        self.listBakFiles();
+      });
 
-            OctoPrint.plugins.klipper.restoreBackup(backup)
-               .done(function (response) {
-                  self.klipperViewModel.consoleMessage("debug", "restoreCfg: " + response.text)
-               });
-         };
+      return promise;
+    };
+  }
 
-
-         var html = "<p>"
-            + gettext('This will overwrite any file with the same name on the configpath.')
-            + "</p>"
-            + "<p>"
-            + backup
-            + "</p>";
-
-         showConfirmationDialog({
-            title: gettext("Are you sure you want to restore now?"),
-            html: html,
-            proceed: gettext("Proceed"),
-            onproceed: restore()
-         })
-      };
-
-      self.markFilesOnPage = function () {
-         self.markedForFileRestore(
-            _.uniq(
-               self
-                  .markedForFileRestore()
-                  .concat(_.map(self.backups.paginatedItems(), "file"))
-            )
-         );
-      };
-
-      self.markAllFiles = function () {
-         self.markedForFileRestore(_.map(self.backups.allItems, "file"));
-      };
-
-      self.clearMarkedFiles = function () {
-         self.markedForFileRestore.removeAll();
-      };
-
-      self.restoreMarkedFiles = function () {
-
-         var perform = function () {
-            self._bulkRestore(self.markedForFileRestore()).done(function () {
-               self.markedForFileRestore.removeAll();
-            });
-         };
-
-         showConfirmationDialog(
-            _.sprintf(gettext("You are about to restore %(count)d backuped config files."), {
-               count: self.markedForFileRestore().length
-            }),
-            perform
-         );
-      };
-
-      self.removeMarkedFiles = function () {
-
-         var perform = function () {
-            self._bulkRemove(self.markedForFileRestore()).done(function () {
-               self.markedForFileRestore.removeAll();
-            });
-         };
-
-         showConfirmationDialog(
-            _.sprintf(gettext("You are about to delete %(count)d backuped config files."), {
-               count: self.markedForFileRestore().length
-            }),
-            perform
-         );
-      };
-
-      self._bulkRestore = function (files) {
-         var title, message, handler;
-
-         title = gettext("Restoring klipper config files");
-         self.klipperViewModel.consoleMessage("debug", title);
-         message = _.sprintf(gettext("Restoring %(count)d backuped config files..."), {
-            count: files.length
-         });
-
-         handler = function (filename) {
-
-            return OctoPrint.plugins.klipper
-               .restoreBackup(filename)
-               .done(function (response) {
-                  deferred.notify(
-                     _.sprintf(gettext("Restored %(filename)s..."), {
-                        filename: _.escape(filename)
-                     }),
-                     true
-                  );
-                  self.klipperViewModel.consoleMessage("debug", "restoreCfg: " + response.text)
-                  self.markedForFileRestore.remove( function (item) { return item.name == filename; } )
-               })
-               .fail(function () {
-                  deferred.notify(
-                     _.sprintf(
-                           gettext(
-                              "Restoring of %(filename)s failed, continuing..."
-                           ),
-                           {filename: _.escape(filename)}
-                     ),
-                     false
-                  );
-               });
-         };
-
-         var deferred = $.Deferred();
-
-         var promise = deferred.promise();
-
-         var options = {
-             title: title,
-             message: message,
-             max: files.length,
-             output: true
-         };
-         showProgressModal(options, promise);
-
-         var requests = [];
-
-         _.each(files, function (filename) {
-            var request = handler(filename);
-            requests.push(request);
-         });
-
-         $.when.apply($, _.map(requests, wrapPromiseWithAlways)).done(function () {
-            deferred.resolve();
-         });
-
-         return promise;
-      };
-
-      self._bulkRemove = function (files) {
-         var title, message, handler;
-
-         title = gettext("Deleting backup files");
-         message = _.sprintf(gettext("Deleting %(count)d backup files..."), {
-            count: files.length
-         });
-
-         handler = function (filename) {
-
-            return OctoPrint.plugins.klipper
-               .deleteBackup(filename)
-               .done(function () {
-                  deferred.notify(
-                     _.sprintf(gettext("Deleted %(filename)s..."), {filename: _.escape(filename)}),
-                     true
-                  );
-                  self.markedForFileRestore.remove( function (item) { return item.name == filename; } )
-               })
-               .fail(function () {
-                  deferred.notify(
-                     _.sprintf(gettext("Deleting of %(filename)s failed, continuing..."), {filename: _.escape(filename)}),
-                     false
-                  );
-               });
-         };
-
-         var deferred = $.Deferred();
-         var promise = deferred.promise();
-         var options = {
-             title: title,
-             message: message,
-             max: files.length,
-             output: true
-         };
-         showProgressModal(options, promise);
-
-         var requests = [];
-         _.each(files, function (filename) {
-            var request = handler(filename);
-            requests.push(request);
-         });
-
-         $.when.apply($, _.map(requests, wrapPromiseWithAlways)).done(function () {
-            deferred.resolve();
-            self.listBakFiles();
-         });
-
-         return promise;
-      };
-   }
-
-   OCTOPRINT_VIEWMODELS.push({
-         construct: KlipperBackupViewModel,
-         dependencies: ["loginStateViewModel",
-                        "klipperViewModel",
-                        "accessViewModel"],
-         elements: ["#klipper_backups_dialog"]
-   });
+  OCTOPRINT_VIEWMODELS.push({
+    construct: KlipperBackupViewModel,
+    dependencies: ["loginStateViewModel", "klipperViewModel", "accessViewModel"],
+    elements: ["#klipper_backups_dialog"],
+  });
 });

@@ -21,7 +21,8 @@ $(function () {
     self.settings = parameters[0];
     self.klipperViewModel = parameters[1];
     self.klipperEditorViewModel = parameters[2];
-    self.access = parameters[3];
+    self.klipperBackupViewModel = parameters[3];
+    self.access = parameters[4];
 
     self.header = OctoPrint.getRequestHeaders({
       "content-type": "application/json",
@@ -36,10 +37,8 @@ $(function () {
       {
         name: function (a, b) {
           // sorts ascending
-          if (a["name"].toLocaleLowerCase() < b["name"].toLocaleLowerCase())
-            return -1;
-          if (a["name"].toLocaleLowerCase() > b["name"].toLocaleLowerCase())
-            return 1;
+          if (a["name"].toLocaleLowerCase() < b["name"].toLocaleLowerCase()) return -1;
+          if (a["name"].toLocaleLowerCase() > b["name"].toLocaleLowerCase()) return 1;
           return 0;
         },
         date: function (a, b) {
@@ -80,17 +79,11 @@ $(function () {
       if (!self.klipperViewModel.hasRight("CONFIG")) return;
 
       var perform = function () {
-        OctoPrint.plugins.klipper.deleteCfg(config)
+        OctoPrint.plugins.klipper
+          .deleteCfg(config)
           .done(function () {
             self.listCfgFiles();
-            var html =
-              "<p>" +
-              _.sprintf(
-                gettext(
-                  "All fine</p>"
-                ),
-                { name: _.escape(config) }
-              );
+            var html = "<p>" + _.sprintf(gettext("All fine</p>"), { name: _.escape(config) });
             new PNotify({
               title: gettext("All is fine"),
               text: html,
@@ -99,19 +92,8 @@ $(function () {
             });
           })
           .fail(function (response) {
-            var html =
-              "<p>" +
-              _.sprintf(
-                gettext(
-                  "Failed to remove config %(name)s.</p><p>Please consult octoprint.log for details.</p>"
-                ),
-                { name: _.escape(config) }
-              );
-            html += pnotifyAdditionalInfo(
-              '<pre style="overflow: auto">' +
-              _.escape(response.responseText) +
-              "</pre>"
-            );
+            var html = "<p>" + _.sprintf(gettext("Failed to remove config %(name)s.</p><p>Please consult octoprint.log for details.</p>"), { name: _.escape(config) });
+            html += pnotifyAdditionalInfo('<pre style="overflow: auto">' + _.escape(response.responseText) + "</pre>");
             new PNotify({
               title: gettext("Could not remove config"),
               text: html,
@@ -130,13 +112,7 @@ $(function () {
     };
 
     self.markFilesOnPage = function () {
-      self.markedForFileRemove(
-        _.uniq(
-          self
-            .markedForFileRemove()
-            .concat(_.map(self.configs.paginatedItems(), "file"))
-        )
-      );
+      self.markedForFileRemove(_.uniq(self.markedForFileRemove().concat(_.map(self.configs.paginatedItems(), "file"))));
     };
 
     self.markAllFiles = function () {
@@ -185,13 +161,7 @@ $(function () {
             });
           })
           .fail(function () {
-            deferred.notify(
-              _.sprintf(
-                gettext("Deleting of %(filename)s failed, continuing..."),
-                { filename: _.escape(filename) }
-              ),
-              false
-            );
+            deferred.notify(_.sprintf(gettext("Deleting of %(filename)s failed, continuing..."), { filename: _.escape(filename) }), false);
           });
       };
 
@@ -221,7 +191,7 @@ $(function () {
 
     self.showBackupsDialog = function () {
       self.klipperViewModel.consoleMessage("debug", "showBackupsDialog:");
-
+      self.klipperBackupViewModel.listBakFiles();
       var dialog = $("#klipper_backups_dialog");
       dialog.modal({
         show: "true",
@@ -233,8 +203,8 @@ $(function () {
       if (!self.klipperViewModel.hasRight("CONFIG")) return;
       var config = {
         content: "",
-        file: "Change Filename"
-      }
+        file: "Change Filename",
+      };
       self.klipperEditorViewModel.process(config);
       var editorDialog = $("#klipper_editor");
       editorDialog.modal({
@@ -247,21 +217,20 @@ $(function () {
     self.showEditUserDialog = function (file) {
       if (!self.klipperViewModel.hasRight("CONFIG")) return;
 
-      OctoPrint.plugins.klipper.getCfg(file)
-        .done(function (response) {
-          var config = {
-            content: response.response.config,
-            file: file
-          }
-          self.klipperEditorViewModel.process(config);
+      OctoPrint.plugins.klipper.getCfg(file).done(function (response) {
+        var config = {
+          content: response.response.config,
+          file: file,
+        };
+        self.klipperEditorViewModel.process(config);
 
-          var editorDialog = $("#klipper_editor");
-          editorDialog.modal({
-            show: "true",
-            backdrop: "static",
-            minHeight: "600px",
-          });
+        var editorDialog = $("#klipper_editor");
+        editorDialog.modal({
+          show: "true",
+          backdrop: "static",
+          minHeight: "600px",
         });
+      });
     };
 
     self.addMacro = function () {
@@ -322,9 +291,9 @@ $(function () {
       }
     };
 
-    self.onDataUpdaterPluginMessage = function(plugin, data) {
+    self.onDataUpdaterPluginMessage = function (plugin, data) {
       if (plugin == "klipper" && data.type == "reload" && data.subtype == "configlist") {
-        self.klipperViewModel.consoleMessage("debug", "onDataUpdaterPluginMessage klipper reload configlist")
+        self.klipperViewModel.consoleMessage("debug", "onDataUpdaterPluginMessage klipper reload configlist");
         self.listCfgFiles();
       }
     };
@@ -332,7 +301,7 @@ $(function () {
 
   OCTOPRINT_VIEWMODELS.push({
     construct: KlipperSettingsViewModel,
-    dependencies: ["settingsViewModel", "klipperViewModel", "klipperEditorViewModel", "accessViewModel"],
+    dependencies: ["settingsViewModel", "klipperViewModel", "klipperEditorViewModel", "klipperBackupViewModel", "accessViewModel"],
     elements: ["#settings_plugin_klipper"],
   });
 });

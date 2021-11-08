@@ -104,7 +104,8 @@ class KlipperPlugin(
         return dict(
             connection=dict(
                 port="/tmp/printer",
-                replace_connection_panel=True
+                replace_connection_panel=True,
+                show_klipper_config_button=True
             ),
             macros=[dict(
                 name="E-Stop",
@@ -238,7 +239,8 @@ class KlipperPlugin(
             admin=[
                 ["connection", "port"],
                 ["configuration", "configpath"],
-                ["configuration", "replace_connection_panel"]
+                ["configuration", "replace_connection_panel"],
+                ["configuration", "show_klipper_config_button"]
             ],
             user=[
                 ["macros"],
@@ -264,6 +266,13 @@ class KlipperPlugin(
                     settings.get(["replace_connection_panel"])
                 )
                 settings.remove(["replace_connection_panel"])
+
+            if settings.has(["show_klipper_config_button"]):
+                settings.set(
+                    ["connection", "show_klipper_config_button"],
+                    settings.get(["show_klipper_config_button"])
+                )
+                settings.remove(["show_klipper_config_button"])
 
             if settings.has(["probeHeight"]):
                 settings.set(["probe", "height"],
@@ -509,9 +518,9 @@ class KlipperPlugin(
                 displayVersion=self._plugin_version,
                 type="github_release",
                 current=self._plugin_version,
-                user="thelastWallE",
+                user="deltamaker",
                 repo="OctoprintKlipperPlugin",
-                pip="https://github.com/thelastWallE/OctoprintKlipperPlugin/archive/{target_version}.zip",
+                pip="https://github.com/DeltaMaker/OctoprintKlipperPlugin/archive/{target_version}.zip",
                 stable_branch=dict(
                     name="Stable",
                     branch="master",

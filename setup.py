@@ -27,7 +27,7 @@ plugin_author = "thelastWallE"
 
 plugin_author_email = "thelastwalle.github@gmail.com"
 
-plugin_url = "https://github.com/thelastWallE/OctoprintKlipperPlugin"
+plugin_url = "https://github.com/DeltaMaker/OctoprintKlipperPlugin"
 
 plugin_license = "AGPLv3"
 

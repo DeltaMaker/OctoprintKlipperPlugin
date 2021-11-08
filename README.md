@@ -1,11 +1,11 @@
 ## Fork information:
-- This is forked from [the original](https://github.com/mmone/OctoprintKlipperPlugin) version 0.2.5
+- This is forked from [the official version ](https://github.com/thelastWallE/OctoprintKlipperPlugin) of the plugin.
 
 
 ## Fork Installation Information:
 - Uninstall any other versions of the plugin using Plugin Manager or other means, as necessary.
 - Install this version by using Plugin Manager's "From Url" option and entering this URL:
-`https://github.com/thelastWallE/OctoprintKlipperPlugin/archive/master.zip`
+`https://github.com/DeltaMaker/OctoprintKlipperPlugin/archive/master.zip`
 
 
 # OctoKlipper Plugin
@@ -30,7 +30,7 @@ Search for "Klipper" in OctoPrints Plugin Manager.
 
 or install manually using this URL / zip:
 
-    https://github.com/thelastWallE/OctoprintKlipperPlugin/archive/master.zip
+    https://github.com/DeltaMaker/OctoprintKlipperPlugin/archive/master.zip
 
 ## Update
 

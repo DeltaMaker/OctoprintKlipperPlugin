@@ -30,7 +30,7 @@ Search for "Klipper" in OctoPrints Plugin Manager.
 
 or install manually using this URL / zip:
 
-    https://github.com/thelastWallE/OctoprintKlipperPlugin/archive/master.zip
+    https://github.com/DeltaMaker/OctoprintKlipperPlugin/archive/master.zip
 
 ## Update
 

@@ -19,13 +19,13 @@ plugin_package = "octoprint_klipper"
 
 plugin_name = "OctoKlipper"
 
-plugin_version = "0.3.8.4"
+plugin_version = "0.3.8.5"
 
 plugin_description = """A plugin for OctoPrint to configure,control and monitor the Klipper 3D printer software."""
 
-plugin_author = "thelastWallE"
+plugin_author = "DeltaMaker"
 
-plugin_author_email = "thelastwalle.github@gmail.com"
+plugin_author_email = "info@deltamaker.com"
 
 plugin_url = "https://github.com/DeltaMaker/OctoprintKlipperPlugin"
 
